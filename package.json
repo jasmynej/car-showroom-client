@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "jest",
+    "test": "jest --testPathIgnorePatterns='.e2e.test'",
+    "test:unit": "jest --testPathIgnorePatterns='.e2e.test'",
+    "test:e2e": "jest --testMatch='**/*.e2e.test.ts?(x)'",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
