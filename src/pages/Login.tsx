@@ -1,66 +1,88 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import axios from 'axios';
 import type { Role } from '../types';
+import { API_BASE_URL } from '../config/api';
+
+const roleHomeMap: Record&lt;Role, string&gt; = {
+  CUSTOMER: '/customer/home',
+  STAFF: '/staff/home',
+  MANAGER: '/manager/home',
+};
 
 export default function Login() {
   const { setUser } = useApp();
   const navigate = useNavigate();
 
-  const [userId, setUserId] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState<Role>('CUSTOMER');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState&lt;Role&gt;('CUSTOMER');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) =&gt; {
     e.preventDefault();
-    const id = Number(userId);
-    if (!userId || isNaN(id) || id <= 0) {
-      setError('User ID must be a positive number.');
-      return;
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+        email,
+        password,
+        role,
+      });
+
+      const userData = response.data;
+      setUser(userData.userId, userData.role, userData.name, userData.email);
+      navigate(roleHomeMap[userData.role as Role]);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        setError('Invalid credentials or incorrect role. Please try again.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-    if (!name.trim()) {
-      setError('Name is required.');
-      return;
-    }
-    setUser(id, role, name.trim());
-    navigate(`/${role.toLowerCase()}/home`);
   };
 
   return (
-    <div className="auth-page">
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <h1>Login</h1>
-        {error && <p className="error-text">{error}</p>}
+    &lt;div className="auth-page"&gt;
+      &lt;form className="auth-form" onSubmit={handleSubmit}&gt;
+        &lt;h1&gt;Login&lt;/h1&gt;
+        {error &amp;&amp; &lt;p className="error-text"&gt;{error}&lt;/p&gt;}
 
-        <label>User ID</label>
-        <input
-          type="number"
-          value={userId}
-          onChange={e => setUserId(e.target.value)}
-          placeholder="Enter your user ID"
+        &lt;label&gt;Email&lt;/label&gt;
+        &lt;input
+          type="email"
+          value={email}
+          onChange={e =&gt; setEmail(e.target.value)}
+          placeholder="Enter your email"
           required
-        />
+        /&gt;
 
-        <label>Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Your display name"
+        &lt;label&gt;Password&lt;/label&gt;
+        &lt;input
+          type="password"
+          value={password}
+          onChange={e =&gt; setPassword(e.target.value)}
+          placeholder="Enter your password"
           required
-        />
+        /&gt;
 
-        <label>Role</label>
-        <select value={role} onChange={e => setRole(e.target.value as Role)}>
-          <option value="CUSTOMER">Customer</option>
-          <option value="STAFF">Staff</option>
-          <option value="MANAGER">Manager</option>
-        </select>
+        &lt;label&gt;Role&lt;/label&gt;
+        &lt;select value={role} onChange={e =&gt; setRole(e.target.value as Role)}&gt;
+          &lt;option value="CUSTOMER"&gt;Customer&lt;/option&gt;
+          &lt;option value="STAFF"&gt;Staff&lt;/option&gt;
+          &lt;option value="MANAGER"&gt;Manager&lt;/option&gt;
+        &lt;/select&gt;
 
-        <button type="submit" className="btn btn-primary btn-full">Login</button>
-        <p className="auth-link">Don't have an account? <Link to="/signup">Sign Up</Link></p>
-      </form>
-    </div>
+        &lt;button type="submit" className="btn btn-primary btn-full" disabled={loading}&gt;
+          {loading ? 'Logging in...' : 'Login'}
+        &lt;/button&gt;
+        &lt;p className="auth-link"&gt;Don't have an account? &lt;Link to="/signup"&gt;Sign Up&lt;/Link&gt;&lt;/p&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
   );
 }
