@@ -63,20 +63,20 @@ export default function SignUp() {
         <h1>Sign Up</h1>
         {error && <p className="error-text">{error}</p>}
 
-        <label>Name</label>
-        <input type="text" value={form.name} onChange={e => set('name', e.target.value)} required />
+        <label htmlFor="name">Name</label>
+        <input id="name" type="text" value={form.name} onChange={e => set('name', e.target.value)} required />
 
-        <label>Email</label>
-        <input type="email" value={form.email} onChange={e => set('email', e.target.value)} required />
+        <label htmlFor="email">Email</label>
+        <input id="email" type="email" value={form.email} onChange={e => set('email', e.target.value)} required />
 
-        <label>Password</label>
-        <input type="password" value={form.password} onChange={e => set('password', e.target.value)} required />
+        <label htmlFor="password">Password</label>
+        <input id="password" type="password" value={form.password} onChange={e => set('password', e.target.value)} required />
 
-        <label>Confirm Password</label>
-        <input type="password" value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)} required />
+        <label htmlFor="confirmPassword">Confirm Password</label>
+        <input id="confirmPassword" type="password" value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)} required />
 
-        <label>Contact Information</label>
-        <textarea value={form.contactInfo} onChange={e => set('contactInfo', e.target.value)} rows={3} required />
+        <label htmlFor="contactInfo">Contact Information</label>
+        <textarea id="contactInfo" value={form.contactInfo} onChange={e => set('contactInfo', e.target.value)} rows={3} required />
 
         <label className="checkbox-label">
           <input type="checkbox" checked={form.terms} onChange={e => set('terms', e.target.checked)} />
