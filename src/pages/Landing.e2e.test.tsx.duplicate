@@ -1,0 +1,97 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Landing from './Landing';
+import Login from './Login';
+import SignUp from './SignUp';
+import { AppProvider } from '../context/AppContext';
+
+/**
+ * E2E test for Landing page navigation flows.
+ * This test communicates with the actual SpringBoot backend on port 8080.
+ * 
+ * Prerequisites:
+ * - SpringBoot backend must be running on http://localhost:8080
+ */
+describe('Landing Page E2E Test', () => {
+  it('should render the landing page with welcome message and action buttons', () => {
+    // Arrange: Render the Landing component with routing and context
+    render(
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
+    );
+
+    // Assert: Check that the main heading is present
+    const heading = screen.getByRole('heading', { name: /car showroom/i });
+    expect(heading).toBeInTheDocument();
+
+    // Assert: Check that the welcome message is displayed
+    const welcomeMessage = screen.getByText(/welcome! please sign up or log in to continue/i);
+    expect(welcomeMessage).toBeInTheDocument();
+
+    // Assert: Check that Sign Up button is present
+    const signUpButton = screen.getByRole('button', { name: /sign up/i });
+    expect(signUpButton).toBeInTheDocument();
+    expect(signUpButton).toHaveClass('btn-primary');
+
+    // Assert: Check that Login button is present
+    const loginButton = screen.getByRole('button', { name: /login/i });
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveClass('btn-outline');
+  });
+
+  it('should navigate to Login page when Login button is clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
+    );
+
+    // Act: Click the Login button
+    const loginButton = screen.getByRole('button', { name: /login/i });
+    await user.click(loginButton);
+
+    // Assert: Verify navigation to Login page
+    await waitFor(() => {
+      const loginHeading = screen.getByRole('heading', { name: /^login$/i });
+      expect(loginHeading).toBeInTheDocument();
+    });
+  });
+
+  it('should navigate to SignUp page when Sign Up button is clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/signup" element={<SignUp />} />
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
+    );
+
+    // Act: Click the Sign Up button
+    const signUpButton = screen.getByRole('button', { name: /sign up/i });
+    await user.click(signUpButton);
+
+    // Assert: Verify navigation to Sign Up page
+    await waitFor(() => {
+      const signUpHeading = screen.getByRole('heading', { name: /^sign up$/i });
+      expect(signUpHeading).toBeInTheDocument();
+    });
+  });
+});

@@ -1,34 +1,35 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './Login';
 import { AppProvider } from '../context/AppContext';
 
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
-
 /**
- * Test suite for Login component
- * Tests user authentication form and validation
+ * E2E test suite for Login component
+ * Tests user authentication form, validation, and navigation flows.
+ * This test communicates with the actual SpringBoot backend on port 8080.
+ * 
+ * Prerequisites:
+ * - SpringBoot backend must be running on http://localhost:8080
  */
-describe('Login', () => {
-  beforeEach(() => {
-    mockNavigate.mockClear();
-  });
-
+describe('Login E2E', () => {
   /**
-   * Helper function to render Login with router context
+   * Helper function to render Login with router context and routes
    */
   const renderLogin = () => {
     return render(
-      <MemoryRouter>
-        <AppProvider>
-          <Login />
-        </AppProvider>
-      </MemoryRouter>
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<div>Sign Up Page</div>} />
+            <Route path="/customer/home" element={<div>Customer Home</div>} />
+            <Route path="/staff/home" element={<div>Staff Home</div>} />
+            <Route path="/manager/home" element={<div>Manager Home</div>} />
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
     );
   };
 
@@ -90,7 +91,7 @@ describe('Login', () => {
     await user.click(loginButton);
     
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/customer/home');
+      expect(screen.getByText('Customer Home')).toBeInTheDocument();
     });
   });
 
@@ -114,7 +115,7 @@ describe('Login', () => {
     await user.click(loginButton);
     
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/staff/home');
+      expect(screen.getByText('Staff Home')).toBeInTheDocument();
     });
   });
 
@@ -138,7 +139,7 @@ describe('Login', () => {
     await user.click(loginButton);
     
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/manager/home');
+      expect(screen.getByText('Manager Home')).toBeInTheDocument();
     });
   });
 
@@ -161,7 +162,8 @@ describe('Login', () => {
       expect(screen.getByText('User ID must be a positive number.')).toBeInTheDocument();
     });
     
-    expect(mockNavigate).not.toHaveBeenCalled();
+    // Verify no navigation occurred
+    expect(screen.queryByText('Customer Home')).not.toBeInTheDocument();
   });
 
   /**
@@ -290,32 +292,28 @@ describe('Login', () => {
     await user.click(loginButton);
     
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/customer/home');
+      expect(screen.getByText('Customer Home')).toBeInTheDocument();
     });
   });
 
   /**
-   * Test form submission prevention
-   * Scenario: User submits form
-   * Expected: Should prevent default form submission
+   * Test navigation to signup page
+   * Scenario: User clicks on signup link
+   * Expected: Should navigate to signup page
    */
-  it('should prevent default form submission', async () => {
+  it('should navigate to signup page when signup link is clicked', async () => {
     const user = userEvent.setup();
     renderLogin();
     
-    const userIdInput = screen.getByPlaceholderText('Enter your user ID');
-    const nameInput = screen.getByPlaceholderText('Your display name');
-    const form = screen.getByRole('button', { name: 'Login' }).closest('form')!;
+    const signupLink = screen.getByText('Sign Up');
+    await user.click(signupLink);
     
-    const submitHandler = jest.fn((e) => e.preventDefault());
-    form.onsubmit = submitHandler;
-    
-    await user.type(userIdInput, '123');
-    await user.type(nameInput, 'John Doe');
-    await user.click(screen.getByRole('button', { name: 'Login' }));
-    
-    expect(submitHandler).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByText('Sign Up Page')).toBeInTheDocument();
+    });
   });
+
+
 
   /**
    * Test input placeholders

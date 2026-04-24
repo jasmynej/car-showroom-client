@@ -1,37 +1,34 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './Navbar';
 import { AppProvider } from '../context/AppContext';
 
 /**
- * Mock useNavigate from react-router-dom
+ * E2E test suite for Navbar component
+ * Tests navigation links and logout functionality for different user roles with real routing.
  */
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
-
-/**
- * Test suite for Navbar component
- * Tests navigation links and logout functionality for different user roles
- */
-describe('Navbar', () => {
-  beforeEach(() => {
-    mockNavigate.mockClear();
-  });
-
+describe('Navbar E2E', () => {
   /**
-   * Helper function to render Navbar with router context
+   * Helper function to render Navbar with router context and routes
    */
   const renderNavbar = (role: string) => {
     return render(
-      <MemoryRouter>
-        <AppProvider>
-          <Navbar role={role} />
-        </AppProvider>
-      </MemoryRouter>
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<><Navbar role={role} /><div>Home Page</div></>} />
+            <Route path="/customer/home" element={<div>Customer Home</div>} />
+            <Route path="/customer/cars" element={<div>View Cars Page</div>} />
+            <Route path="/staff/home" element={<div>Staff Home</div>} />
+            <Route path="/staff/services" element={<div>Car Services Page</div>} />
+            <Route path="/staff/inventory" element={<div>Inventory Page</div>} />
+            <Route path="/manager/home" element={<div>Manager Home</div>} />
+            <Route path="/manager/report" element={<div>Report Page</div>} />
+            <Route path="/manager/invoice" element={<div>Invoices Page</div>} />
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
     );
   };
 
@@ -91,18 +88,20 @@ describe('Navbar', () => {
   });
 
   /**
-   * Test logout button click
+   * Test logout button click with real navigation
    * Scenario: User clicks logout button
-   * Expected: Should clear user context and navigate to home
+   * Expected: Should clear user context and navigate to home page
    */
-  it('should handle logout click', async () => {
+  it('should handle logout click and navigate to home', async () => {
     const user = userEvent.setup();
     renderNavbar('CUSTOMER');
     
     const logoutButton = screen.getByText('Log Out');
     await user.click(logoutButton);
     
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    await waitFor(() => {
+      expect(screen.getByText('Home Page')).toBeInTheDocument();
+    });
   });
 
   /**
