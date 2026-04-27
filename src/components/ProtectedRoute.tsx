@@ -1,15 +1,29 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import type { Role } from '../types';
 
 interface ProtectedRouteProps {
-  allowedRoles: string[];
+  allowedRoles: Role[];
 }
 
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const { role } = useApp();
+  const { role, isAuthenticated } = useApp();
 
-  if (!role) return <Navigate to="/login" replace />;
-  if (!allowedRoles.includes(role)) return <Navigate to="/login" replace />;
+  // Not authenticated - redirect to login
+  if (!isAuthenticated()) {
+    return &lt;Navigate to="/login" replace /&gt;;
+  }
 
-  return <Outlet />;
+  // Authenticated but wrong role - redirect to correct home
+  if (role &amp;&amp; !allowedRoles.includes(role)) {
+    const roleHomeMap: Record&lt;Role, string&gt; = {
+      'CUSTOMER': '/customer/home',
+      'STAFF': '/staff/home',
+      'MANAGER': '/manager/home'
+    };
+    return &lt;Navigate to={roleHomeMap[role] || '/login'} replace /&gt;;
+  }
+
+  // Authenticated and correct role
+  return &lt;Outlet /&gt;;
 }
