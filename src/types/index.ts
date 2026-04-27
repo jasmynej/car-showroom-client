@@ -20,7 +20,8 @@ export interface Car {
 }
 
 export interface User {
-  userId: number;
+  id: number;
+  userId: string;
   name: string;
   email: string;
   contactInfo: string;
